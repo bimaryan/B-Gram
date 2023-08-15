@@ -1,11 +1,11 @@
 <?php
 session_start();
-include 'koneksi.php';
 
-if (!isset($_SESSION['user_id']) || !isset($_POST['post_id']) || !isset($_POST['action'])) {
-    header('HTTP/1.1 400 Bad Request');
+if (!isset($_SESSION['user_id'])) {
     exit();
 }
+
+include 'koneksi.php';
 
 $user_id = $_SESSION['user_id'];
 $post_id = $_POST['post_id'];
@@ -19,11 +19,10 @@ if ($action === 'like') {
     $koneksi->query($sql_delete_like);
 }
 
-// Hitung jumlah suka setelah like atau unlike
-$sql_likes_count = "SELECT COUNT(*) AS like_count FROM likes WHERE post_id = $post_id";
+// Get updated like count
+$sql_likes_count = "SELECT COUNT(*) AS count FROM likes WHERE post_id = $post_id";
 $result_likes_count = $koneksi->query($sql_likes_count);
-$row_likes_count = $result_likes_count->fetch_assoc();
-$likes_count = $row_likes_count['like_count'];
+$likes_count = $result_likes_count->fetch_assoc()['count'];
 
 $response = array(
     'likes' => $likes_count,
@@ -31,4 +30,3 @@ $response = array(
 );
 
 echo json_encode($response);
-?>

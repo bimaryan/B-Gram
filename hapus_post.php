@@ -16,6 +16,9 @@ if (isset($_GET['post_id'])) {
     $sql_check_owner = "SELECT * FROM posting WHERE id = $post_id AND user_id = $user_id";
     $result_check_owner = $koneksi->query($sql_check_owner);
 
+    $sql_delete_shares = "DELETE FROM shares WHERE post_id = $post_id";
+    $koneksi->query($sql_delete_shares);
+
     if ($result_check_owner->num_rows > 0) {
         // Hapus likes yang terkait dengan postingan
         $sql_delete_likes = "DELETE FROM likes WHERE post_id = $post_id";

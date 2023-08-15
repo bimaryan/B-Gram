@@ -13,12 +13,12 @@ $user_id = $_SESSION['user_id'];
 // Mengambil informasi pengguna yang sedang dilihat profilnya
 if (isset($_GET['user_id'])) {
     $viewed_user_id = $_GET['user_id'];
-    $sql_viewed_user = "SELECT * FROM Pengguna WHERE id = $viewed_user_id";
+    $sql_viewed_user = "SELECT * FROM pengguna WHERE id = $viewed_user_id";
     $result_viewed_user = $koneksi->query($sql_viewed_user);
     $viewed_user_data = $result_viewed_user->fetch_assoc();
 
     // Mengambil posting pengguna yang sedang dilihat profilnya
-    $sql_viewed_post = "SELECT * FROM Posting WHERE user_id = $viewed_user_id ORDER BY created_at DESC";
+    $sql_viewed_post = "SELECT * FROM posting WHERE user_id = $viewed_user_id ORDER BY created_at DESC";
     $result_viewed_post = $koneksi->query($sql_viewed_post);
 }
 ?>
@@ -32,6 +32,7 @@ if (isset($_GET['user_id'])) {
     <title>Pencarian Akun</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.7/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 </head>
 
 <body class="bg-gray-100">
@@ -39,9 +40,9 @@ if (isset($_GET['user_id'])) {
         <div class="container mx-auto flex justify-between items-center px-4">
             <a href="./" class="text-2xl font-semibold" style="text-decoration: none;">B-Gram</a>
             <div class="flex space-x-4">
-                <a href="profil.php?user_id=<?php echo $user_id; ?>" class="text-blue-500 nav-link">Profil</a>
-                <a href="search.php" class="text-blue-500 nav-link">Pencarian Akun</a>
-                <a href="logout.php" class="text-blue-500 nav-link">Keluar</a>
+                <a href="uploads.php" class="text-blue-500 nav-link active"><i class="bi bi-upload"></i></a>
+                <a href="pesan.php" class="text-blue-500 nav-link"><i class="bi bi-chat-text"></i></a>
+                <a href="logout.php" class="text-blue-500 nav-link"><i class="bi bi-box-arrow-left"></i></a>
             </div>
         </div>
     </nav>
@@ -56,7 +57,7 @@ if (isset($_GET['user_id'])) {
         <?php
         if (isset($_GET['query'])) {
             $search_query = $_GET['query'];
-            $sql_search = "SELECT * FROM Pengguna WHERE username LIKE '%$search_query%' OR email LIKE '%$search_query%'";
+            $sql_search = "SELECT * FROM pengguna WHERE username LIKE '%$search_query%' OR email LIKE '%$search_query%'";
             $result_search = $koneksi->query($sql_search);
 
             if ($result_search->num_rows > 0) {
@@ -74,6 +75,16 @@ if (isset($_GET['user_id'])) {
         }
         ?>
     </div>
+
+    <br />
+
+    <nav class="fixed bottom-0 left-0 w-full bg-white shadow">
+        <div class="container mx-auto flex justify-between py-2 px-4">
+            <a href="./" class="text-blue-500 nav-link"><i class="bi bi-house-door"></i></a>
+            <a href="search.php" class="text-blue-500 nav-link"><i class="bi bi-search"></i></a>
+            <a href="profil.php?user_id=<?php echo $user_id; ?>" class="text-blue-500 nav-link"><i class="bi bi-person"></i></a>
+        </div>
+    </nav>
 </body>
 
 </html>

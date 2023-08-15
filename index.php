@@ -49,6 +49,19 @@ if (isset($_POST['update_profile_picture'])) {
     }
 }
 
+if (isset($_POST['share_post'])) {
+    $post_id = $_POST['post_id'];
+    $selected_recipients = $_POST['recipient_id'];
+
+    // Ensure you sanitize and validate the input here
+
+    foreach ($selected_recipients as $recipient_id) {
+        // Construct and execute your SQL query here for each recipient
+        $sql_insert_share = "INSERT INTO shares (user_id, post_id, recipient_id) VALUES ($user_id, $post_id, $recipient_id)";
+        $koneksi->query($sql_insert_share);
+    }
+}
+
 // Mengambil informasi pengguna
 $sql_user = "SELECT * FROM pengguna WHERE id = $user_id";
 $result_user = $koneksi->query($sql_user);
@@ -68,6 +81,34 @@ $result_post = $koneksi->query($sql_post);
     <title>Beranda Pengguna</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.7/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <style>
+        #share-popup {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            top: 0;
+            align-items: flex-end;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        #share-popup-content .btn {
+            flex: 1;
+        }
+
+        #share-popup-content {
+            transition: transform 0.3s, opacity 0.3s;
+            transform: translateY(100%);
+            width: 100%;
+            max-width: 500px;
+            /* Adjust as needed */
+            border-top-left-radius: 0;
+            border-top-right-radius: 0;
+        }
+    </style>
 </head>
 
 <body class="bg-gray-100">
@@ -75,9 +116,9 @@ $result_post = $koneksi->query($sql_post);
         <div class="container mx-auto flex justify-between items-center px-4">
             <a href="./" class="text-2xl font-semibold" style="text-decoration: none;">B-Gram</a>
             <div class="flex space-x-4">
-                <a href="profil.php?user_id=<?php echo $user_id; ?>" class="text-blue-500 nav-link">Profil</a>
-                <a href="search.php" class="text-blue-500 nav-link">Pencarian Akun</a>
-                <a href="logout.php" class="text-blue-500 nav-link">Keluar</a>
+                <a href="uploads.php" class="text-blue-500 nav-link active"><i class="bi bi-upload"></i></a>
+                <a href="pesan.php" class="text-blue-500 nav-link"><i class="bi bi-chat-text"></i></a>
+                <a href="logout.php" class="text-blue-500 nav-link"><i class="bi bi-box-arrow-left"></i></a>
             </div>
         </div>
     </nav>
@@ -85,9 +126,17 @@ $result_post = $koneksi->query($sql_post);
     <div class="container mx-auto mt-3">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <?php while ($post = $result_post->fetch_assoc()) : ?>
-                <div class="bg-white p-4 shadow-md">
+                <?php
+                $sql_check_like = "SELECT * FROM likes WHERE user_id = $user_id AND post_id = " . $post['id'];
+                $result_check_like = $koneksi->query($sql_check_like);
+                $is_liked = $result_check_like->num_rows > 0;
+
+                $posted_user_id = $post['user_id'];
+                $posted_user_data = getUserData($posted_user_id);
+                ?>
+                <div class="rounded bg-white p-4 shadow-md">
                     <div class="flex items-center mb-2">
-                        <img src="<?php echo $post['image_path']; ?>" alt="Postingan" class="w-10 h-10 rounded-full">
+                        <img src="<?php echo $posted_user_data['profile_picture']; ?>" alt="Profil Pengguna" class="w-10 h-10 rounded-full">
                         <?php
                         $posted_user_id = $post['user_id'];
                         $posted_user_data = getUserData($posted_user_id);
@@ -96,7 +145,7 @@ $result_post = $koneksi->query($sql_post);
                     </div>
                     <div class="relative">
                         <?php if (pathinfo($post['image_path'], PATHINFO_EXTENSION) === 'mp4' || pathinfo($post['image_path'], PATHINFO_EXTENSION) === 'MOV') : ?>
-                            <video id="video-<?php echo $post['id']; ?>" src="<?php echo $post['image_path']; ?>" alt="Postingan" class="w-full h-64 object-cover"></video>
+                            <video id="video-<?php echo $post['id']; ?>" src="<?php echo $post['image_path']; ?>" alt="Postingan" class="w-full h-64 object-cover" loop></video>
                             <div class="absolute inset-0 flex items-center justify-center" id="video-overlay-<?php echo $post['id']; ?>">
                                 <button class="text-white bg-black bg-opacity-50 p-2 rounded-full" id="play-btn-<?php echo $post['id']; ?>" onclick="toggleVideoPlayback(<?php echo $post['id']; ?>)">
                                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -113,30 +162,69 @@ $result_post = $koneksi->query($sql_post);
                             <img src="<?php echo $post['image_path']; ?>" alt="Postingan" class="w-full h-64 object-cover">
                         <?php endif; ?>
                     </div>
-                    <!-- <img src="<?php echo $post['image_path']; ?>" alt="Postingan" class="w-full h-64 object-cover"> -->
                     <p class="mt-2"><?php echo $post['caption']; ?></p>
 
-                    <!-- Tombol Like -->
-                    <form method="post" action="">
-                        <input type="hidden" name="post_id" value="<?php echo $post['id']; ?>">
-                        <?php
-                        $sql_check_like = "SELECT * FROM Likes WHERE user_id = $user_id AND post_id = " . $post['id'];
-                        $result_check_like = $koneksi->query($sql_check_like);
-                        $is_liked = $result_check_like->num_rows > 0;
-                        ?>
-                        <div id="like-container-<?php echo $post['id']; ?>">
+                    <div class="flex justify-between items-center mt-4">
+                        <div class="flex items-center">
                             <?php if ($is_liked) : ?>
                                 <button onclick="unlikePost(<?php echo $post['id']; ?>)" class="text-red-500">Unlike</button>
                             <?php else : ?>
                                 <button onclick="likePost(<?php echo $post['id']; ?>)" class="text-blue-500">Like</button>
                             <?php endif; ?>
-                            <p id="like-count-<?php echo $post['id']; ?>"><?php echo getLikesCount($post['id']); ?> suka</p>
+                            <div class="ml-2 text-gray-500" id="like-count-<?php echo $post['id']; ?>"><?php echo getLikesCount($post['id']); ?> suka</div>
                         </div>
-                    </form>
+                        <button class="text-blue-500" onclick="showSharePopup(<?php echo $post['id']; ?>)">Berbagi</button>
+                    </div>
                 </div>
             <?php endwhile; ?>
+
         </div>
+        <div id="share-popup" class="fixed inset-0 flex items-end justify-center hidden bg-black bg-opacity-50 transition-opacity">
+            <div class="bg-white p-4 rounded-t-lg w-full transition-transform" id="share-popup-content">
+                <h2 class="text-lg font-semibold mb-3">Bagikan Postingan</h2>
+                <form method="post">
+                    <input type="hidden" name="post_id" value="">
+                    <ul class="list-group">
+                        <?php
+                        $sql_users = "SELECT id, username FROM pengguna WHERE id != $user_id";
+                        $result_users = $koneksi->query($sql_users);
+
+                        while ($user = $result_users->fetch_assoc()) {
+                            // Display each user as an option to share
+                            echo '<li class="list-group-item flex items-center justify-between">';
+                            echo '<label>';
+                            echo '<span class="mr-2">' . $user['username'] . '</span>';
+                            echo '<input type="checkbox" class="form-check-input" name="recipient_id[]" value="' . $user['id'] . '">';
+                            echo '</label>';
+                            echo '</li>';
+                        }
+                        ?>
+                    </ul>
+                    <div class="mt-3">
+                        <button type="submit" name="share_post" class="btn btn-primary">Bagikan</button>
+                        <button type="button" onclick="hideSharePopup()" class="btn btn-secondary">Batal</button>
+                    </div>
+                </form>
+                <!-- <hr class="my-3">
+                <p class="font-semibold">Bagikan melalui:</p>
+                <div class="flex gap-3">
+                    <a href="#" class="btn btn-outline-primary" onclick="shareOnWhatsApp()">WhatsApp</a>
+                    <a href="#" class="btn btn-outline-info" onclick="copyPostLink()">Salin Tautan</a>
+                </div> -->
+            </div>
+        </div>
+
+
     </div>
+    <br />
+    <br />
+    <nav class="fixed bottom-0 left-0 w-full bg-white shadow">
+        <div class="container mx-auto flex justify-between py-2 px-4">
+            <a href="./" class="text-blue-500 nav-link"><i class="bi bi-house-door"></i></a>
+            <a href="search.php" class="text-blue-500 nav-link"><i class="bi bi-search"></i></a>
+            <a href="profil.php?user_id=<?php echo $user_id; ?>" class="text-blue-500 nav-link"><i class="bi bi-person"></i></a>
+        </div>
+    </nav>
 
     <script>
         function likePost(postId) {
@@ -184,8 +272,61 @@ $result_post = $koneksi->query($sql_post);
             }
         }
     </script>
+    <script>
+        function showSharePopup(postId) {
+            const popup = document.getElementById('share-popup');
+            const popupContent = document.getElementById('share-popup-content');
 
+            // Set the post_id value in the form
+            const form = popupContent.querySelector('form');
+            const postInput = form.querySelector('input[name="post_id"]');
+            postInput.value = postId;
 
+            // Show the popup with a fade-in and slide-up effect
+            popup.style.display = 'flex';
+            setTimeout(() => {
+                popup.style.opacity = '1';
+                popupContent.style.transform = 'translateY(0)';
+            }, 10);
+        }
+
+        function hideSharePopup() {
+            const popup = document.getElementById('share-popup');
+            const popupContent = document.getElementById('share-popup-content');
+
+            // Hide the popup with a fade-out and slide-down effect
+            popup.style.opacity = '0';
+            popupContent.style.transform = 'translateY(100%)';
+            setTimeout(() => {
+                popup.style.display = 'none';
+            }, 300);
+        }
+
+        function shareOnWhatsApp() {
+            // Replace this URL with the actual link to the post
+            const postLink = 'https://localhost/post/123';
+
+            // Format the message for WhatsApp sharing
+            const message = `Lihat postingan menarik: ${postLink}`;
+
+            // Create the WhatsApp sharing link
+            const whatsappLink = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+
+            // Open the WhatsApp sharing link
+            window.open(whatsappLink, '_blank');
+        }
+
+        function copyPostLink() {
+            const postLink = 'https://localhost/post/123'; // Replace with the actual link
+            const tempInput = document.createElement('input');
+            tempInput.value = postLink;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            alert('Tautan berhasil disalin!');
+        }
+    </script>
 </body>
 
 </html>
