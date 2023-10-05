@@ -2,7 +2,7 @@
 $host = "localhost"; // Ganti dengan host database Anda
 $username = "root"; // Ganti dengan nama pengguna database Anda
 $password = ""; // Ganti dengan kata sandi database Anda
-$database = "testing"; // Ganti dengan nama basis data Anda
+$database = "if0_34806348_bgramm"; // Ganti dengan nama basis data Anda
 
 // Membuat koneksi ke database
 $koneksi = new mysqli($host, $username, $password, $database);

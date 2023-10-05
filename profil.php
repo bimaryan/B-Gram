@@ -18,7 +18,7 @@ if (isset($_GET['user_id'])) {
     $viewed_user_data = $result_viewed_user->fetch_assoc();
 
     // Mengambil posting pengguna yang sedang dilihat profilnya
-    $sql_viewed_post = "SELECT * FROM Posting WHERE user_id = $viewed_user_id ORDER BY created_at DESC";
+    $sql_viewed_post = "SELECT * FROM posting WHERE user_id = $viewed_user_id ORDER BY created_at DESC";
     $result_viewed_post = $koneksi->query($sql_viewed_post);
 }
 
@@ -92,6 +92,9 @@ $is_following = $result_check_follow->num_rows > 0;
                                 <a href="message.php?recipient_id=<?php echo $viewed_user_id; ?>" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 ml-2">Message</a>
                             </div>
                         <?php endif; ?>
+                        <div class="mt-3">
+                            <span><?php echo $viewed_user_data['email']; ?></span>
+                        </div>
                     </div>
                 </div>
             </div>

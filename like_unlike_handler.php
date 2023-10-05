@@ -2,6 +2,7 @@
 session_start();
 
 if (!isset($_SESSION['user_id'])) {
+    header("location: index.php");
     exit();
 }
 
@@ -26,7 +27,7 @@ $likes_count = $result_likes_count->fetch_assoc()['count'];
 
 $response = array(
     'likes' => $likes_count,
-    'button' => ($action === 'like') ? '<button onclick="unlikePost(' . $post_id . ')" class="text-red-500">Unlike</button>' : '<button onclick="likePost(' . $post_id . ')" class="text-blue-500">Like</button>'
+    'button' => ($action === '<i class="bi bi-hand-thumbs-up-fill"></i>') ? '<button onclick="unlikePost(' . $post_id . ')" class="text-red-500"><i class="bi bi-hand-thumbs-up"></i></button>' : '<button onclick="likePost(' . $post_id . ')" class="text-blue-500"><i class="bi bi-hand-thumbs-up-fill"></i></button>'
 );
 
 echo json_encode($response);

@@ -112,7 +112,7 @@ $result_post = $koneksi->query($sql_post);
 </head>
 
 <body class="bg-gray-100">
-    <nav class="bg-white py-4">
+    <nav class="navbar navbar-expand-lg bg-white py-4 fixed-top shadow">
         <div class="container mx-auto flex justify-between items-center px-4">
             <a href="./" class="text-2xl font-semibold" style="text-decoration: none;">B-Gram</a>
             <div class="flex space-x-4">
@@ -123,8 +123,12 @@ $result_post = $koneksi->query($sql_post);
         </div>
     </nav>
 
-    <div class="container mx-auto mt-3">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <br />
+    <br />
+    <br />
+
+    <div class="container mx-auto mt-4">
+        <div class="grid grid-cols-1 gap-4">
             <?php while ($post = $result_post->fetch_assoc()) : ?>
                 <?php
                 $sql_check_like = "SELECT * FROM likes WHERE user_id = $user_id AND post_id = " . $post['id'];
@@ -145,18 +149,17 @@ $result_post = $koneksi->query($sql_post);
                     </div>
                     <div class="relative">
                         <?php if (pathinfo($post['image_path'], PATHINFO_EXTENSION) === 'mp4' || pathinfo($post['image_path'], PATHINFO_EXTENSION) === 'MOV') : ?>
-                            <video id="video-<?php echo $post['id']; ?>" src="<?php echo $post['image_path']; ?>" alt="Postingan" class="w-full h-64 object-cover" loop></video>
+                            <video id="video-<?php echo $post['id']; ?>" data-post-id="<?php echo $post['id']; ?>" src="<?php echo $post['image_path']; ?>" alt="Postingan" class="w-full object-cover" loop></video>
                             <div class="absolute inset-0 flex items-center justify-center" id="video-overlay-<?php echo $post['id']; ?>">
                                 <button class="text-white bg-black bg-opacity-50 p-2 rounded-full" id="play-btn-<?php echo $post['id']; ?>" onclick="toggleVideoPlayback(<?php echo $post['id']; ?>)">
-                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3l14 9-14 9V3z"></path>
-                                    </svg>
+                                    <i class="bi bi-play"></i>
                                 </button>
                                 <button class="text-white bg-black bg-opacity-50 p-2 rounded-full hidden" id="pause-btn-<?php echo $post['id']; ?>" onclick="toggleVideoPlayback(<?php echo $post['id']; ?>)">
-                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"></path>
-                                    </svg>
+                                    <i class="bi bi-pause"></i>
                                 </button>
+                                <div class="text-white absolute bottom-2 right-2">
+                                    <span id="video-duration-<?php echo $post['id']; ?>">0:00</span>
+                                </div>
                             </div>
                         <?php else : ?>
                             <img src="<?php echo $post['image_path']; ?>" alt="Postingan" class="w-full h-64 object-cover">
@@ -167,9 +170,9 @@ $result_post = $koneksi->query($sql_post);
                     <div class="flex justify-between items-center mt-4">
                         <div class="flex items-center">
                             <?php if ($is_liked) : ?>
-                                <button onclick="unlikePost(<?php echo $post['id']; ?>)" class="text-red-500">Unlike</button>
+                                <button onclick="unlikePost(<?php echo $post['id']; ?>)" class="btn btn-primary"><i class="bi bi-hand-thumbs-up-fill"></i></button>
                             <?php else : ?>
-                                <button onclick="likePost(<?php echo $post['id']; ?>)" class="text-blue-500">Like</button>
+                                <button onclick="likePost(<?php echo $post['id']; ?>)" class="btn btn-danger"><i class="bi bi-hand-thumbs-up"></i></button>
                             <?php endif; ?>
                             <div class="ml-2 text-gray-500" id="like-count-<?php echo $post['id']; ?>"><?php echo getLikesCount($post['id']); ?> suka</div>
                         </div>
@@ -179,10 +182,15 @@ $result_post = $koneksi->query($sql_post);
             <?php endwhile; ?>
 
         </div>
-        <div id="share-popup" class="fixed inset-0 flex items-end justify-center hidden bg-black bg-opacity-50 transition-opacity">
-            <div class="bg-white p-4 rounded-t-lg w-full transition-transform" id="share-popup-content">
-                <h2 class="text-lg font-semibold mb-3">Bagikan Postingan</h2>
-                <form method="post">
+        <div id="share-popup" class="fixed inset-0 flex items-center justify-center hidden bg-black bg-opacity-50">
+            <div class="bg-white p-4 rounded-lg overflow-y-auto" id="share-popup-content" style="height: 50vh;">
+                <nav class="navbar navbar-expand-lg fixed-top">
+                    <div class="container-fluid">
+                        <div class="navbar-brand">Bagikan Postingan</div>
+                    </div>
+                </nav>
+                <br />
+                <form method="post" class="container mt-2">
                     <input type="hidden" name="post_id" value="">
                     <ul class="list-group">
                         <?php
@@ -213,8 +221,6 @@ $result_post = $koneksi->query($sql_post);
                 </div> -->
             </div>
         </div>
-
-
     </div>
     <br />
     <br />
@@ -256,21 +262,64 @@ $result_post = $koneksi->query($sql_post);
         }
     </script>
     <script>
+        let currentVideoId = null;
+
         function toggleVideoPlayback(postId) {
             const video = document.getElementById(`video-${postId}`);
             const playButton = document.getElementById(`play-btn-${postId}`);
             const pauseButton = document.getElementById(`pause-btn-${postId}`);
+            const durationElement = document.getElementById(`video-duration-${postId}`);
+
+            if (currentVideoId !== null && currentVideoId !== postId) {
+                const prevVideo = document.getElementById(`video-${currentVideoId}`);
+                prevVideo.pause();
+            }
 
             if (video.paused) {
                 video.play();
                 playButton.style.display = 'none';
                 pauseButton.style.display = 'block';
+                currentVideoId = postId;
+
+                video.addEventListener('timeupdate', function() {
+                    const minutes = Math.floor(video.currentTime / 60);
+                    const seconds = Math.floor(video.currentTime % 60);
+                    durationElement.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+                });
             } else {
                 video.pause();
                 playButton.style.display = 'block';
                 pauseButton.style.display = 'none';
+                currentVideoId = null;
             }
         }
+
+        // Use Intersection Observer to handle video playback
+        const videoElements = document.querySelectorAll('video');
+
+        const options = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.5 // Trigger when at least 50% of the video is visible
+        };
+
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const postId = entry.target.getAttribute('data-post-id');
+                    toggleVideoPlayback(postId);
+                } else {
+                    const postId = entry.target.getAttribute('data-post-id');
+                    const video = document.getElementById(`video-${postId}`);
+                    video.pause();
+                }
+            });
+        }, options);
+
+        videoElements.forEach(video => {
+            const postId = video.getAttribute('data-post-id');
+            observer.observe(video);
+        });
     </script>
     <script>
         function showSharePopup(postId) {

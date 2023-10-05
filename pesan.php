@@ -79,7 +79,8 @@ $result_users = $koneksi->query($sql_users);
             <?php endwhile; ?>
         </ul>
     </div>
-    <br/>
+    <br />
+    <br />
     <nav class="fixed bottom-0 left-0 w-full bg-white shadow">
         <div class="container mx-auto flex justify-between py-2 px-4">
             <a href="./" class="text-blue-500 nav-link"><i class="bi bi-house-door"></i></a>

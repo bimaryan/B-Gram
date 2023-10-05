@@ -124,14 +124,14 @@ $result_shared_posts = $koneksi->query($sql_shared_posts);
                     <a href="profil.php?user_id=<?php echo $recipient_data['id']; ?>" class="navbar-brand text-xl font-semibold"><?php echo $recipient_data['username']; ?></a>
                 </div>
                 <div>
-                    <a href="beranda_chat.php" class="btn btn-secondary">Kembali</a>
+                    <a href="pesan.php" class="btn btn-secondary">Kembali</a>
                 </div>
             </div>
         </div>
         <br />
         <div class="message-container mt-5">
             <?php
-            $sql_messages = "SELECT * FROM Messages WHERE (sender_id = $user_id AND recipient_id = $recipient_id) OR (sender_id = $recipient_id AND recipient_id = $user_id) ORDER BY created_at ASC";
+            $sql_messages = "SELECT * FROM messages WHERE (sender_id = $user_id AND recipient_id = $recipient_id) OR (sender_id = $recipient_id AND recipient_id = $user_id) ORDER BY created_at ASC";
             $result_messages = $koneksi->query($sql_messages);
 
             while ($message = $result_messages->fetch_assoc()) {

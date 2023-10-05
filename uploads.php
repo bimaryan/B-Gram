@@ -68,8 +68,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['media'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Upload Media</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.7/dist/tailwind.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet"> -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <style>
+        .bottom-navigation {
+            background-color: white;
+            box-shadow: 0px -2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .bottom-nav-link {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0.75rem;
+            font-size: 1.5rem;
+        }
+    </style>
 </head>
 
 <body class="bg-gray-100">
@@ -89,11 +105,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['media'])) {
         <form method="post" enctype="multipart/form-data">
             <div class="mb-3">
                 <label for="media" class="form-label">Choose File:</label>
-                <input type="file" name="media" id="media" accept="image/*,video/*" class="form-control" required>
+                <input type="file" name="media" id="media" accept="image/*,video/*" class="form-control" onchange="previewMedia(event)" required>
+            </div>
+            <div class="rounded bg-white p-4 shadow-md mb-3">
+                <div id="media-preview" class="mb-3"></div>
             </div>
             <div class="mb-3">
                 <label for="caption" class="form-label">Caption:</label>
-                <input type="text" name="caption" id="caption" class="form-control" placeholder="Caption" required>
+                <textarea name="caption" id="caption" class="form-control" placeholder="Caption..." style="resize: none;"></textarea>
+                <!-- <input type="text" name="caption" id="caption" class="form-control" placeholder="Caption"> -->
             </div>
             <button type="submit" class="btn btn-primary">Upload</button>
         </form>
@@ -101,13 +121,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['media'])) {
 
     <br />
     <br />
-    <nav class="fixed bottom-0 left-0 w-full bg-white shadow">
-        <div class="container mx-auto flex justify-between py-2 px-4">
-            <a href="./" class="text-blue-500 nav-link"><i class="bi bi-house-door"></i></a>
-            <a href="search.php" class="text-blue-500 nav-link"><i class="bi bi-search"></i></a>
-            <a href="profil.php?user_id=<?php echo $user_id; ?>" class="text-blue-500 nav-link"><i class="bi bi-person"></i></a>
-        </div>
-    </nav>
+    <div class="bottom-navigation fixed bottom-0 left-0 w-full flex bg-white shadow">
+        <a href="./" class="bottom-nav-link text-gray-500"><i class="bi bi-house-door"></i></a>
+        <a href="search.php" class="bottom-nav-link text-gray-500"><i class="bi bi-search"></i></a>
+        <a href="profil.php?user_id=<?php echo $user_id; ?>" class="bottom-nav-link text-gray-500"><i class="bi bi-person"></i></a>
+    </div>
+
+    <script>
+        function previewMedia(event) {
+            const mediaInput = event.target;
+            const previewContainer = document.getElementById('media-preview');
+            const captionInput = document.getElementById('caption');
+
+            if (mediaInput.files && mediaInput.files[0]) {
+                const mediaFile = mediaInput.files[0];
+                const mediaType = mediaFile.type;
+
+                if (mediaType.startsWith('uploads/')) {
+                    previewContainer.innerHTML = `<img src="${URL.createObjectURL(mediaFile)}" class="max-w-full object-cover" alt="Media Preview">`;
+                } else if (mediaType.startsWith('video/')) {
+                    previewContainer.innerHTML = `<video src="${URL.createObjectURL(mediaFile)}" class="w-full object-cover" controlsList="nodownload" controls></video>`;
+                } else {
+                    previewContainer.innerHTML = '';
+                }
+
+                captionInput.disabled = false;
+            } else {
+                previewContainer.innerHTML = '';
+                captionInput.disabled = true;
+            }
+        }
+    </script>
 </body>
 
 </html>

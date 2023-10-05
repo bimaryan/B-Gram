@@ -91,4 +91,5 @@ function getFollowingList($user_id) {
 
     return $following;
 }
+
 ?>
